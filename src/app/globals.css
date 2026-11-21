@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Sticky form scrollbar - thinner and more subtle */
+form::-webkit-scrollbar {
+  width: 6px;
+}
+
+form::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+form::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+form::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* AOS animations compatibility */
+[data-aos] {
+  pointer-events: none;
+}
+
+[data-aos].aos-animate {
+  pointer-events: auto;
+}
+
+/* Swiper custom styles */
+.swiper-pagination-bullet {
+  background: #035E88 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: #513C8D !important;
+}
+
+/* Custom utility classes */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+.country-html-content {
+  @apply text-base md:text-xl;
+}
+
+.country-html-content h1 {
+  @apply text-2xl md:text-3xl font-bold border-l-4 border-primary text-accent pl-3 mb-4;
+}
+
+.country-html-content h2 {
+  @apply text-xl md:text-3xl font-bold border-l-4 border-primary text-accent pl-3 mb-4;
+}
+
+.country-html-content h3 {
+  @apply text-xl md:text-2xl font-semibold text-secondary mt-8 mb-3;
+}
+
+.country-html-content h4 {
+  @apply text-lg font-semibold text-secondary mt-6 mb-2;
+}
+
+.country-html-content ul {
+  @apply ml-8 mb-2 list-disc;
+}
+
+.country-html-content li {
+  @apply mb-3;
+}
+
+.country-html-content p {
+  @apply mb-3 text-xl leading-relaxed;
+}
+
+.country-html-content strong {
+  @apply text-primary font-semibold;
+}
+
+.country-html-content a {
+  @apply text-primary underline hover:text-secondary transition-colors duration-200;
+}
+
+.country-html-content img {
+  @apply w-full h-auto md:h-[350px] object-cover object-center rounded-lg my-5 shadow-md;
+}
+
+.country-html-content div {
+  @apply mb-6;
+}
