@@ -2,11 +2,34 @@ import { notFound } from 'next/navigation'
 import SingleBlogContent from '@/components/Blogs/SingleBlogSetup/SingleBlogContent'
 import RelatedBlogs from '@/components/Blogs/SingleBlogSetup/RelatedBlogs'
 
+const ADMIN_API = 'https://admin.panamatravel.co.uk/api/blogs'
+
+// The real single-post route is /post/<slug>; the others are kept as fallbacks
+// in case the admin API is changed.
 const CANDIDATE_ENDPOINTS = (slug) => [
-  `https://admin.panamatravel.co.uk/api/blogs/post/slug/${encodeURIComponent(slug)}`,
-  `https://admin.panamatravel.co.uk/api/blogs/post/?slug=${encodeURIComponent(slug)}`,
-  `https://admin.panamatravel.co.uk/api/blogs/post/${encodeURIComponent(slug)}`,
+  `${ADMIN_API}/post/${encodeURIComponent(slug)}`,
+  `${ADMIN_API}/post/slug/${encodeURIComponent(slug)}`,
+  `${ADMIN_API}/post/?slug=${encodeURIComponent(slug)}`,
 ]
+
+// The listing endpoint works even while the single-post endpoint is failing.
+// We use it to tell two very different situations apart:
+//   - slug is NOT in the list  -> the post really does not exist -> 404
+//   - slug IS in the list      -> the admin API is broken        -> 5xx
+// Returning 404 for a backend outage would tell Google these URLs do not
+// exist and get every blog post de-indexed, so never do that.
+async function slugExistsInList(slug) {
+  try {
+    const res = await fetch(`${ADMIN_API}/posts`, { next: { revalidate: 300 } })
+    if (!res.ok) return false
+    const data = await res.json()
+    const blogs = Array.isArray(data?.blogs) ? data.blogs : []
+    return blogs.some((b) => b?.slug === slug)
+  } catch (error) {
+    console.error('Blog listing check failed:', error)
+    return false
+  }
+}
 
 async function getBlogBySlug(slug) {
   if (!slug) return null;
@@ -92,30 +115,33 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function SingleBlogPage({ params }) {
-  try {
-    const blog = await getBlogBySlug(params.slug)
+  const blog = await getBlogBySlug(params.slug)
 
-    if (!blog) {
-      notFound()
+  if (!blog) {
+    // Does the post exist at all? If it does, this is a backend outage, not a
+    // missing page - throw so Next.js answers 5xx and search engines retry.
+    if (await slugExistsInList(params.slug)) {
+      throw new Error(
+        `Blog "${params.slug}" exists in the listing but the admin API could not return it. ` +
+        `Check https://admin.panamatravel.co.uk/api/blogs/post/${params.slug}`
+      )
     }
-
-    return (
-      <div className="container mx-auto px-4 mt-20 py-16">
-        <SingleBlogContent blog={blog} loading={false} error="" backHref="/blogs/" />
-
-        {/* Related section */}
-        <RelatedBlogs
-          blogId={blog.id}
-          slug={blog.slug}
-          categoryIds={blog.category_ids || (blog.categories || []).map((c) => c.id).filter(Boolean)}
-          tags={blog.tags || []}
-          limit={3}
-          title="Related Posts"
-        />
-      </div>
-    )
-  } catch (error) {
-    console.error('Error in SingleBlogPage:', error);
     notFound()
   }
+
+  return (
+    <div className="container mx-auto px-4 mt-20 py-16">
+      <SingleBlogContent blog={blog} loading={false} error="" backHref="/blogs/" />
+
+      {/* Related section */}
+      <RelatedBlogs
+        blogId={blog.id}
+        slug={blog.slug}
+        categoryIds={blog.category_ids || (blog.categories || []).map((c) => c.id).filter(Boolean)}
+        tags={blog.tags || []}
+        limit={3}
+        title="Related Posts"
+      />
+    </div>
+  )
 }
